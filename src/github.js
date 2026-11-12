@@ -1,4 +1,30 @@
+import { execFileSync } from 'node:child_process';
+
 const API = 'https://api.github.com';
+
+const run = (cmd, args) => {
+  try {
+    return execFileSync(cmd, args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+  } catch {
+    return '';
+  }
+};
+
+export const githubToken = () => process.env.GITHUB_TOKEN || process.env.GH_TOKEN || run('gh', ['auth', 'token']) || undefined;
+
+// "git@github.com:dono/repo.git" ou "https://github.com/dono/repo" -> "dono/repo"
+export function parseRemote(url) {
+  return url.match(/github\.com[:/]([^/]+\/[^/]+?)(?:\.git)?\/?$/)?.[1] ?? null;
+}
+
+export const detectRepo = () => parseRemote(run('git', ['remote', 'get-url', 'origin']));
+export const currentBranch = () => run('git', ['branch', '--show-current']) || null;
+
+export async function findPRForBranch(repo, branch, token) {
+  const owner = repo.split('/')[0];
+  const [pr] = await gh(`/repos/${repo}/pulls?state=all&head=${owner}:${encodeURIComponent(branch)}`, token);
+  return pr?.number ?? null;
+}
 
 async function gh(path, token, init = {}) {
   const res = await fetch(API + path, {

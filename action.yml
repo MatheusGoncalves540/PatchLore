@@ -1,15 +1,24 @@
 name: PatchLore
 description: Gera patchnotes visuais padronizados para a PR e comenta a imagem nela.
 inputs:
-  anthropic-api-key:
-    description: Chave da API da Anthropic
+  api-key:
+    description: Chave da API do provedor de IA
     required: true
+  provider:
+    description: "Preset: claude ou deepseek. Para outra API, use base-url + api-type."
+    default: claude
+  model:
+    description: Modelo (vazio = o padrão do preset)
+    default: ''
+  base-url:
+    description: URL base da API (vazio = a do preset)
+    default: ''
+  api-type:
+    description: "Formato da API: anthropic ou openai (vazio = o do preset)"
+    default: ''
   github-token:
     description: Token com contents:write e pull-requests:write
     default: ${{ github.token }}
-  model:
-    description: Modelo Claude usado no resumo
-    default: claude-opus-5-5
 runs:
   using: composite
   steps:
@@ -21,12 +30,15 @@ runs:
       run: npm ci --omit=dev && npx playwright install --with-deps chromium
     - shell: bash
       env:
-        ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
+        PATCHLORE_API_KEY: ${{ inputs.api-key }}
+        PATCHLORE_PROVIDER: ${{ inputs.provider }}
+        PATCHLORE_MODEL: ${{ inputs.model }}
+        PATCHLORE_BASE_URL: ${{ inputs.base-url }}
+        PATCHLORE_API_TYPE: ${{ inputs.api-type }}
         GITHUB_TOKEN: ${{ inputs.github-token }}
       run: >
         node "${{ github.action_path }}/src/cli.js"
         --repo "${{ github.repository }}"
         --pr "${{ github.event.pull_request.number }}"
-        --model "${{ inputs.model }}"
         --out "${{ runner.temp }}/patchlore"
         --comment

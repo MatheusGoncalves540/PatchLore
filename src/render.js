@@ -1,4 +1,4 @@
-const TAG = {
+export const TAG = {
   novo: { label: 'NOVO', stroke: '#1d4ed8', fg: '#ffffff', bg: '#1d4ed8', icon: '<path d="M12 5v14M5 12h14"/>' },
   melhoria: { label: 'MELHORIA', stroke: '#0f766e', fg: '#ffffff', bg: '#0f766e', icon: '<path d="M4 17l6-6 4 4 6-6"/><path d="M14 9h6v6"/>' },
   correcao: { label: 'CORREÇÃO', stroke: '#6d28d9', fg: '#3b0764', bg: '#ede9fe', icon: '<path d="M20 6L9 17l-5-5"/>' },
