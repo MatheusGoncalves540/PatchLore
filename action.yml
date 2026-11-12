@@ -1,0 +1,32 @@
+name: PatchLore
+description: Gera patchnotes visuais padronizados para a PR e comenta a imagem nela.
+inputs:
+  anthropic-api-key:
+    description: Chave da API da Anthropic
+    required: true
+  github-token:
+    description: Token com contents:write e pull-requests:write
+    default: ${{ github.token }}
+  model:
+    description: Modelo Claude usado no resumo
+    default: claude-opus-5-5
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+    - shell: bash
+      working-directory: ${{ github.action_path }}
+      run: npm ci --omit=dev && npx playwright install --with-deps chromium
+    - shell: bash
+      env:
+        ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+      run: >
+        node "${{ github.action_path }}/src/cli.js"
+        --repo "${{ github.repository }}"
+        --pr "${{ github.event.pull_request.number }}"
+        --model "${{ inputs.model }}"
+        --out "${{ runner.temp }}/patchlore"
+        --comment
