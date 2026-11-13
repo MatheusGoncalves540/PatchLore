@@ -32,6 +32,7 @@ Uso
   patchlore antiga..nova    gera o patchnotes do que entrou em nova desde antiga
   patchlore                 reaproveita as refs do .patchlore.toml (ou abre o menu)
   patchlore config          configura provedores de IA (Claude, DeepSeek, outros)
+  patchlore mcp             servidor MCP (stdio) para editores como Zed e Claude
 
 Opções
 `
@@ -39,6 +40,7 @@ Opções
 type opcoes struct {
 	notas, saida, provedor, modelo, titulo string
 	abrir                                  bool
+	notasProntas                           []byte // notas já em memória (vindas do MCP)
 }
 
 func main() {
@@ -79,12 +81,18 @@ func rodar(args []string, saida io.Writer) error {
 		return fmt.Errorf("argumentos demais: %v (use antiga..nova)", posicionais)
 	case len(posicionais) == 1 && posicionais[0] == "config":
 		return menu.Provedores(config.Caminho())
+	case len(posicionais) == 1 && posicionais[0] == "mcp":
+		return servirMCP(os.Stdin, os.Stdout)
 	}
 	ref := ""
 	if len(posicionais) == 1 {
 		ref = posicionais[0]
 	}
-	return gerar(context.Background(), ref, o, saida)
+	dir, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	return gerar(context.Background(), dir, ref, o, saida)
 }
 
 // O pacote flag para no primeiro argumento solto; aqui as flags podem vir
@@ -103,11 +111,7 @@ func lerFlags(fs *flag.FlagSet, args []string) ([]string, error) {
 	}
 }
 
-func gerar(ctx context.Context, ref string, o opcoes, saida io.Writer) error {
-	dir, err := os.Getwd()
-	if err != nil {
-		return err
-	}
+func gerar(ctx context.Context, dir, ref string, o opcoes, saida io.Writer) error {
 	// Repo e git primeiro: se faltar algo aqui, nem chegamos a gastar com a IA.
 	raiz, err := origem.Raiz(dir)
 	if err != nil {
@@ -183,6 +187,9 @@ func terminal() bool {
 }
 
 func obterNotas(ctx context.Context, o opcoes, m notas.Mudancas, tm tema.Tema, saida io.Writer) (notas.Notas, error) {
+	if o.notasProntas != nil {
+		return notas.Decodificar(o.notasProntas, tm)
+	}
 	if o.notas != "" {
 		dados, err := os.ReadFile(o.notas)
 		if err != nil {
