@@ -71,7 +71,10 @@ func Local(dir, antiga, nova string) (notas.Mudancas, error) {
 	}
 	m.Repo = filepath.Base(raiz)
 
-	log, err := git(dir, "log", antiga+".."+nova, "--no-merges", "--format=%B%x1e")
+	// As refs podem vir do .patchlore.toml de um repo de terceiros. Com
+	// --end-of-options, algo como "--output=arquivo" vira ref inválida em vez
+	// de opção do git.
+	log, err := git(dir, "log", "--no-merges", "--format=%B%x1e", "--end-of-options", antiga+".."+nova)
 	if err != nil {
 		return m, err
 	}

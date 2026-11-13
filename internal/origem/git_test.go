@@ -72,12 +72,12 @@ func TestLocalSemCommits(t *testing.T) {
 
 func TestLocalRefComCaraDeOpcao(t *testing.T) {
 	dir := repoDeTeste(t)
-	alvo := filepath.Join(t.TempDir(), "invadido.txt")
-	if _, err := Local(dir, "--output="+alvo, "dev"); err == nil {
+	pasta := t.TempDir()
+	if _, err := Local(dir, "--output="+filepath.Join(pasta, "invadido"), "dev"); err == nil {
 		t.Fatal("ref começando com - deveria ser recusada")
 	}
-	if _, err := os.Stat(alvo); err == nil {
-		t.Fatal("o git tratou a ref como opção e escreveu o arquivo")
+	if itens, _ := os.ReadDir(pasta); len(itens) > 0 {
+		t.Fatalf("o git tratou a ref como opção e escreveu %s", itens[0].Name())
 	}
 }
 
