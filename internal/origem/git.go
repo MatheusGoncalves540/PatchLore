@@ -20,7 +20,9 @@ import (
 var ErrSemCommits = errors.New("nenhum commit entre as refs")
 
 func git(dir string, args ...string) (string, error) {
-	cmd := exec.Command("git", args...)
+	// Config do repo não pode rodar programas: fsmonitor desligado aqui,
+	// diff externo e textconv desligados no diff.
+	cmd := exec.Command("git", append([]string{"-c", "core.fsmonitor=false"}, args...)...)
 	cmd.Dir = dir
 	var saida, erro bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &saida, &erro
@@ -87,7 +89,7 @@ func Local(dir, antiga, nova string) (notas.Mudancas, error) {
 		return m, fmt.Errorf("%w %s..%s", ErrSemCommits, antiga, nova)
 	}
 
-	numstat, err := git(dir, "diff", "--numstat", "--end-of-options", antiga+"..."+nova)
+	numstat, err := git(dir, "diff", "--numstat", "--no-ext-diff", "--no-textconv", "--end-of-options", antiga+"..."+nova)
 	if err != nil {
 		return m, err
 	}
