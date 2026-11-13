@@ -1,0 +1,11 @@
+{
+  "titulo": "Busca mais rápida e regras claras de cadastro",
+  "itens": [
+    { "tag": "novo", "titulo": "Busca por cliente", "texto": "Agora dá para buscar clientes pelo nome, e-mail ou telefone direto na tela inicial, sem abrir o cadastro." },
+    { "tag": "melhoria", "titulo": "Listas mais rápidas", "texto": "As listas de pedidos carregam em menos da metade do tempo, mesmo com milhares de registros." },
+    { "tag": "correcao", "titulo": "Data no relatório", "texto": "O relatório mensal mostrava o último dia do mês anterior. Agora a data sai certa." },
+    { "tag": "regra", "titulo": "CPF obrigatório", "texto": "Novos cadastros de cliente exigem CPF válido. Cadastros antigos continuam funcionando até a próxima edição." },
+    { "tag": "melhoria", "titulo": "Avisos mais claros", "texto": "As mensagens de erro do formulário dizem o que está errado em cada campo, em vez de um aviso genérico no topo da página." },
+    { "tag": "novo", "titulo": "Exportar para planilha", "texto": "Qualquer lista pode ser exportada para planilha com um clique, mantendo os filtros aplicados." }
+  ]
+}

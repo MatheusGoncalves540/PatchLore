@@ -8,7 +8,7 @@ Pré-requisitos: Go 1.26+ e git no PATH; uma chave de IA para o teste manual com
 ## Tarefas
 ### Fase 1: base
 - [x] T1 [Arquiteto] Criar `go.mod`, `main.go` com ajuda (`-h`) e comentário de pacote explicando o fluxo; adicionar `testdata/referencia.png` · arquivos: `go.mod`, `main.go`, `testdata/referencia.png` · depende: — · verificar: `go build -o patchlore.exe . && ./patchlore.exe -h` imprime o uso
-- [ ] T2 [Backend] Criar tipos `Mudancas` e `Notas`, `Validar(notas, tema)` e exemplo de notas · arquivos: `internal/notas/notas.go`, `internal/notas/notas_test.go`, `testdata/notes.json` · depende: T1 · verificar: `go test ./internal/notas/` (cobre tag inválida, 0 itens, itens acima do limite, campo vazio)
+- [x] T2 [Backend] Criar tipos `Mudancas` e `Notas`, `Validar(notas, tema)` e exemplo de notas · arquivos: `internal/notas/notas.go`, `internal/notas/notas_test.go`, `testdata/notes.json` · depende: T1 · verificar: `go test ./internal/notas/` (cobre tag inválida, 0 itens, itens acima do limite, campo vazio)
 - [x] T3 [Backend] Criar `tema.toml` embutido e carregamento em camadas (embutido → usuário → repo) · arquivos: `internal/tema/tema.go`, `internal/tema/tema.toml`, `internal/tema/tema_test.go` · depende: T1 · verificar: `go test ./internal/tema/` (sobrescrita parcial mantém o resto do embutido)
 - [ ] T4 [Backend] Ler e salvar provedores em `config.toml` (600), presets e sobrescrita por variáveis de ambiente · arquivos: `internal/config/config.go`, `internal/config/config_test.go` · depende: T1 · verificar: `go test ./internal/config/`
 ### Fase 2: origem local
