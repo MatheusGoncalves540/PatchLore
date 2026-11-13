@@ -1,2 +1,4 @@
 node_modules/
 patchlore-out/
+.claude/
+*.exe
