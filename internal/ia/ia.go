@@ -27,6 +27,8 @@ func Resumir(ctx context.Context, p config.Provedor, m notas.Mudancas, t tema.Te
 	switch p.Tipo {
 	case config.TipoAnthropic:
 		return viaAnthropic(ctx, p, m, t)
+	case config.TipoOpenAI:
+		return viaOpenAI(ctx, p, m, t)
 	default:
 		return notas.Notas{}, fmt.Errorf("formato de API desconhecido: %q", p.Tipo)
 	}
