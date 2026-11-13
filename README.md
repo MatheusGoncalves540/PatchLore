@@ -115,7 +115,7 @@ Não é preciso recompilar: a próxima execução já usa o tema novo.
 
 ## Modo PR e GitHub Action
 
-A GitHub Action e o modo PR (`--pr`, `--comment`) ainda usam a versão em Node (`src/`) enquanto a migração para o executável Go não termina.
+O modo PR (`--pr`, `--comment`) e a GitHub Action voltam no executável Go no plano 02; até lá a Action deste branch não funciona (use `@main`).
 
 ## Desenvolvimento
 
