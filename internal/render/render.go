@@ -120,10 +120,10 @@ type layout struct {
 }
 
 type card struct {
-	tag                 corTag
-	titulo, texto       []string
-	altura              float64
-	tagW, tagH          float64
+	tag           corTag
+	titulo, texto []string
+	altura        float64
+	tagW, tagH    float64
 }
 
 const larguraCard = (largura - 2*margem - espacoGrade) / 2

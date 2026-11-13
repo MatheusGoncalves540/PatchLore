@@ -79,7 +79,9 @@ func Prompt(m notas.Mudancas) string {
 // Anthropic recusa limites como minItems/maxItems, então eles vão como texto
 // na descrição e quem garante de verdade é notas.Validar.
 func Schema(t tema.Tema) map[string]any {
-	texto := func(descricao string) map[string]any { return map[string]any{"type": "string", "description": descricao} }
+	texto := func(descricao string) map[string]any {
+		return map[string]any{"type": "string", "description": descricao}
+	}
 	return map[string]any{
 		"type":                 "object",
 		"additionalProperties": false,
