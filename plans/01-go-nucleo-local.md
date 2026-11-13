@@ -13,7 +13,7 @@ Pré-requisitos: Go 1.26+ e git no PATH; uma chave de IA para o teste manual com
 - [x] T4 [Backend] Ler e salvar provedores em `config.toml` (600), presets e sobrescrita por variáveis de ambiente · arquivos: `internal/config/config.go`, `internal/config/config_test.go` · depende: T1 · verificar: `go test ./internal/config/`
 ### Fase 2: origem local
 - [x] T5 [Backend] Ler o repositório local via binário git: listar refs, commits `antiga..nova --no-merges`, numstat · arquivos: `internal/origem/git.go`, `internal/origem/git_test.go` · depende: T2 · verificar: `go test ./internal/origem/` (o teste cria um repositório temporário com 2 branches e 1 merge)
-- [ ] T6 [Backend] Ler e salvar `.patchlore.toml` do projeto (refs + seção `[tema]`) · arquivos: `internal/config/projeto.go`, `internal/config/projeto_test.go` · depende: T4 · verificar: `go test ./internal/config/`
+- [x] T6 [Backend] Ler e salvar `.patchlore.toml` do projeto (refs + seção `[tema]`) · arquivos: `internal/config/projeto.go`, `internal/config/projeto_test.go` · depende: T4 · verificar: `go test ./internal/config/`
 ### Fase 3: IA
 - [ ] T7 [Backend] Montar prompt e JSON Schema a partir do tema; chamar a API da Anthropic via `net/http` com saída estruturada · arquivos: `internal/ia/ia.go`, `internal/ia/anthropic.go`, `internal/ia/ia_test.go` · depende: T2, T3 · verificar: `go test ./internal/ia/` (servidor `httptest` devolve resposta válida, recusa e JSON fora do formato)
 - [ ] T8 [Backend] Chamar APIs compatíveis com OpenAI (`/chat/completions`, aceita cerca ```json) e listar modelos ao vivo nos dois formatos · arquivos: `internal/ia/openai.go`, `internal/ia/modelos.go`, `internal/ia/openai_test.go` · depende: T7 · verificar: `go test ./internal/ia/`
