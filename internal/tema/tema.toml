@@ -1,0 +1,53 @@
+# Tema embutido do PatchLore. Tudo aqui pode ser sobrescrito, campo a campo,
+# em ~/.config/patchlore/tema.toml ou na seção [tema] do .patchlore.toml do repo.
+
+limite_itens = 6
+
+prompt = """
+Você escreve patchnotes para quem USA o sistema, não para devs.
+Leia o histórico das mudanças e devolva só o que muda na experiência do usuário.
+Ignore testes, refactors internos, docs técnicas, planos, CI, dependências e merges.
+Agrupe mudanças relacionadas num item só. Nada de jargão de código, nomes de arquivo ou de função.
+Escreva em português do Brasil, frases diretas. Não invente nada que o histórico não mostre."""
+
+[cores]
+fundo = "#f6f6f3"
+texto = "#16181d"
+texto_suave = "#374151"
+texto_apagado = "#4b5563"
+card = "#ffffff"
+borda_card = "#e5e5e0"
+linha = "#d4d4cf"
+
+# icone = caminho SVG (atributo d) numa caixa de 24x24, desenhado só com traço.
+[tags.novo]
+rotulo = "NOVO"
+descricao = "funcionalidade nova"
+cor = "#1d4ed8"
+texto = "#ffffff"
+fundo = "#1d4ed8"
+icone = "M12 5v14M5 12h14"
+
+[tags.melhoria]
+rotulo = "MELHORIA"
+descricao = "algo existente ficou melhor"
+cor = "#0f766e"
+texto = "#ffffff"
+fundo = "#0f766e"
+icone = "M4 17l6-6 4 4 6-6M14 9h6v6"
+
+[tags.correcao]
+rotulo = "CORREÇÃO"
+descricao = "bug corrigido"
+cor = "#6d28d9"
+texto = "#3b0764"
+fundo = "#ede9fe"
+icone = "M20 6L9 17l-5-5"
+
+[tags.regra]
+rotulo = "REGRA"
+descricao = "nova validação ou restrição"
+cor = "#b45309"
+texto = "#7c2d12"
+fundo = "#fde7cf"
+icone = "M12 3l9 16H3zM12 10v4M12 17h.01"
