@@ -1,5 +1,5 @@
 # PLANO 01: PatchLore em Go — núcleo e modo local
-Status: pendente
+Status: parcial (14/14 tarefas; aceite aguarda IA real e aprovação visual do dono)
 Objetivo: Ter o executável Go `patchlore` gerando notes.json, PNG, PDF e Markdown a partir de duas refs de um repositório git local, sem Node nem navegador.
 Fora do escopo: origem PR do GitHub, comentário na PR, GitHub Action, GoReleaser e remoção do código Node (todos no plano 02); SVG; migração automática do antigo `config.json`.
 Premissas e decisões: Go 1.26, módulo `github.com/MatheusGoncalves540/patchlore`, `main.go` na raiz e pacotes em `internal/` com nomes em PT-BR (notas, tema, config, origem, ia, render, menu). Dependências permitidas: `tdewolff/canvas` (desenho + PNG + PDF a partir do mesmo layout; importar só o núcleo, o rasterizador e o renderer PDF), `BurntSushi/toml`, `charmbracelet/huh`; o resto é biblioteca padrão (`net/http`, `encoding/json`, `flag`, `os/exec`, `embed`). Sem SDK de IA. Fonte Inter (licença OFL) embutida com `go:embed`. Código legível, funções curtas, comentários em PT-BR explicando o porquê com voz humana (nada de comentário que repete o código). Tema (cores, tags com rótulo/cor/ícone, limite de itens, prompt do sistema) em `internal/tema/tema.toml` embutido; o usuário sobrescreve com `~/.config/patchlore/tema.toml` e o repo com a seção `[tema]` do `.patchlore.toml` (repo vence usuário, usuário vence embutido). Provedores e chaves ficam só em `~/.config/patchlore/config.toml` (permissão 600), nunca no `.patchlore.toml`. Variáveis `PATCHLORE_API_KEY`, `PATCHLORE_PROVIDER`, `PATCHLORE_MODEL`, `PATCHLORE_BASE_URL`, `PATCHLORE_API_TYPE` vencem a config salva. Presets: claude (anthropic, `https://api.anthropic.com`, `claude-opus-5-5`) e deepseek (openai, `https://api.deepseek.com`, `deepseek-chat`). Origem local: `patchlore antiga..nova`; commits de `git log antiga..nova --no-merges`; arquivos de `git diff --numstat antiga...nova`; chama o binário `git`, sem `git fetch`; sem argumentos e em terminal, menu huh lista branches locais, remotas e tags; a escolha é salva em `.patchlore.toml` na raiz do repo e reutilizada; zero commits entre as refs → aviso e saída com código 1. Título/descrição no modo local: flag opcional `-t`; o rodapé usa `antiga → nova`. Validação das notas com struct + `Validar()` contra o tema (tags válidas, 1..N itens, campos não vazios); o JSON Schema enviado à IA é montado a partir do tema. Layout replica o visual atual (largura 960 pt, escala 2x no PNG = 1920 px); a altura é calculada a partir do conteúdo. Sem migração do `config.json` antigo: `patchlore config` recria (versão 0.x).
@@ -27,11 +27,11 @@ Pré-requisitos: Go 1.26+ e git no PATH; uma chave de IA para o teste manual com
 - [x] T14 [Docs] Atualizar README: instalação Go, uso local com refs, `.patchlore.toml`, como editar o tema, provedores e variáveis de ambiente · arquivos: `README.md` · depende: T12 · verificar: cada comando do README roda como descrito num repo de teste
 
 ## Aceite final
-- [ ] `go vet ./... && go test ./...` sem falhas
-- [ ] `go build -o patchlore.exe .` gera executável com menos de 25 MB
-- [ ] Num repo com duas branches, `./patchlore.exe production..development` com IA real gera os 4 arquivos e a segunda execução sem argumentos reaproveita as refs do `.patchlore.toml`
-- [ ] PNG gerado comparado lado a lado com `testdata/referencia.png`: mesma hierarquia, cores e tags (aprovação visual do dono)
-- [ ] Mudar a cor de uma tag em `.patchlore.toml` muda o PNG e o PDF sem recompilar (`./patchlore.exe -n testdata/notes.json HEAD~3..HEAD`)
+- [x] `go vet ./... && go test ./...` sem falhas
+- [x] `go build -o patchlore.exe .` gera executável com menos de 25 MB (20,2 MB)
+- [ ] Num repo com duas branches, `./patchlore.exe production..development` com IA real gera os 4 arquivos e a segunda execução sem argumentos reaproveita as refs do `.patchlore.toml` (fluxo verificado com `-n` e com IA falsa no TestPontaAPonta; falta a chamada paga com a chave do dono)
+- [ ] PNG gerado comparado lado a lado com `testdata/referencia.png`: mesma hierarquia, cores e tags (aprovação visual do dono; gere com `PATCHLORE_SALVAR=pasta go test ./internal/render/`)
+- [x] Mudar a cor de uma tag em `.patchlore.toml` muda o PNG e o PDF sem recompilar (`./patchlore.exe -n testdata/notes.json HEAD~3..HEAD`)
 
 ## Riscos
 - Layout do canvas diverge do HTML atual (quebra de linha, espaçamento) → T9 compara com `testdata/referencia.png` e ajusta constantes de espaçamento no tema
