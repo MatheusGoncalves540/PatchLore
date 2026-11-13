@@ -84,7 +84,7 @@ func Local(dir, antiga, nova string) (notas.Mudancas, error) {
 		return m, fmt.Errorf("%w %s..%s", ErrSemCommits, antiga, nova)
 	}
 
-	numstat, err := git(dir, "diff", "--numstat", antiga+"..."+nova)
+	numstat, err := git(dir, "diff", "--numstat", "--end-of-options", antiga+"..."+nova)
 	if err != nil {
 		return m, err
 	}
