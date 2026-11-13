@@ -23,7 +23,7 @@ Pré-requisitos: Go 1.26+ e git no PATH; uma chave de IA para o teste manual com
 ### Fase 5: CLI
 - [x] T11 [Backend] Criar menus huh: escolher refs (antiga e nova) e gerenciar provedores (adicionar, editar, remover, padrão, modelos ao vivo com fallback para digitação) · arquivos: `internal/menu/refs.go`, `internal/menu/provedores.go` · depende: T4, T5, T8 · verificar: `go build -o patchlore.exe . && ./patchlore.exe config` abre o menu e salva `~/.config/patchlore/config.toml`
 - [x] T12 [Backend] Ligar tudo no `main.go`: `antiga..nova` e flags `-n -o -p -m -t --open`; menu sem argumentos em TTY, erro claro sem TTY · arquivos: `main.go` · depende: T6, T9, T10, T11 · verificar: `go build -o patchlore.exe . && ./patchlore.exe -n testdata/notes.json HEAD~3..HEAD -o out` cria `out/notes.json`, `out/patchnotes.png`, `out/patchnotes.pdf` e `out/patchnotes.md`
-- [ ] T13 [QA] Teste ponta a ponta: repo git temporário + IA falsa (`httptest`) passando pelo `main` · arquivos: `main_test.go` · depende: T12 · verificar: `go test -run TestPontaAPonta .`
+- [x] T13 [QA] Teste ponta a ponta: repo git temporário + IA falsa (`httptest`) passando pelo `main` · arquivos: `main_test.go` · depende: T12 · verificar: `go test -run TestPontaAPonta .`
 - [ ] T14 [Docs] Atualizar README: instalação Go, uso local com refs, `.patchlore.toml`, como editar o tema, provedores e variáveis de ambiente · arquivos: `README.md` · depende: T12 · verificar: cada comando do README roda como descrito num repo de teste
 
 ## Aceite final
