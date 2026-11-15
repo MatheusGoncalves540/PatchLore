@@ -13,13 +13,30 @@ commits e arquivos entre duas refs → IA (JSON validado) → layout fixo → PN
 
 ## Instalar
 
-Com Go 1.26 ou mais novo:
+Baixe o binário da última [release](https://github.com/MatheusGoncalves540/patchlore/releases)
+(`patchlore_<versão>_windows_amd64.zip`, `..._linux_amd64.tar.gz`, `..._darwin_arm64.tar.gz`…),
+descompacte e ponha a pasta no `PATH`.
+
+Com Go 1.26 ou mais novo também dá para instalar direto:
 
 ```bash
 go install github.com/MatheusGoncalves540/patchlore@latest
 ```
 
 Também é preciso ter o `git` no PATH.
+
+### Atualizar
+
+O comando acima instala a última versão publicada; rodar de novo já atualiza.
+Quem usa o binário da release troca o executável pelo da release mais nova.
+Para uma versão específica, use `@v0.2.0` (ou `@main` para o código ainda não lançado).
+
+Publicar uma versão é só enviar uma tag: o workflow de release gera os
+binários para linux/darwin/windows em amd64 e arm64.
+
+```bash
+git tag v0.2.0 && git push origin v0.2.0
+```
 
 ## Configurar a IA
 
