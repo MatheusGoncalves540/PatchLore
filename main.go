@@ -39,6 +39,10 @@ Uso
 Opções
 `
 
+// versao vem do binário: o GoReleaser injeta a tag em main.versao, então o
+// MCP e qualquer diagnóstico reportam a mesma versão publicada.
+var versao = "dev"
+
 type opcoes struct {
 	notas, saida, provedor, modelo, titulo string
 	abrir                                  bool

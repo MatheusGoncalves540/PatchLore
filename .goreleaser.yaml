@@ -19,6 +19,7 @@ builds:
       - arm64
     ldflags:
       - -s -w
+      - -X main.versao={{ .Version }}
 
 archives:
   - id: padrao

@@ -4,26 +4,34 @@ on:
   push:
     tags:
       - "v*"
+  # Permite testar o pipeline sem publicar (roda como snapshot).
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    # Imagem fixa de propósito: a chave de cache do setup-go inclui a imagem do
+    # runner, e `ubuntu-latest` já mudou de versão no meio do caminho, furando
+    # o cache (o primeiro build chegou a gastar ~105s só baixando e compilando).
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # o GoReleaser lê o histórico para o changelog
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
+          cache: true
+          cache-dependency-path: go.sum
 
-      - uses: goreleaser/goreleaser-action@v6
+      - uses: goreleaser/goreleaser-action@v7
         with:
           distribution: goreleaser
-          version: "~> v2"
-          args: release --clean
+          # Fixo: `~> v2` troca de patch sozinho e invalida o cache da action.
+          version: v2.20.2
+          args: ${{ github.event_name == 'workflow_dispatch' && 'release --snapshot --clean' || 'release --clean' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

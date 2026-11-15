@@ -156,4 +156,7 @@ go test ./...
 go build -o patchlore .
 ```
 
+Regras do projeto e o passo a passo de publicação de versões ficam em
+[`AGENTS.md`](AGENTS.md).
+
 A fonte Inter vem embutida sob a [SIL Open Font License](internal/render/fontes/OFL.txt).
