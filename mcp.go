@@ -84,7 +84,7 @@ func atender(p pedidoRPC) (any, *erroRPC) {
 		return map[string]any{
 			"protocolVersion": params.ProtocolVersion,
 			"capabilities":    map[string]any{"tools": map[string]any{}},
-			"serverInfo":      map[string]any{"name": "patchlore", "version": versao},
+			"serverInfo":      map[string]any{"name": "patchlore", "version": versaoBinario()},
 		}, nil
 	case "ping":
 		return map[string]any{}, nil

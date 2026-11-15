@@ -82,8 +82,10 @@ Regras:
 
 - **Nunca** mova ou reenvie uma tag já publicada (force-push de tag). Se errou, publique
   a próxima versão.
-- A versão do binário vem da tag: `.goreleaser.yaml` injeta `-X main.versao={{ .Version }}`
-  e o MCP reporta esse valor. Não volte a chumbar versão no código.
+- A versão do binário vem da tag: `.goreleaser.yaml` injeta `-X main.versao={{ .Version }}`.
+  Quem instala com `go install ...@vX` não recebe esse ldflags, então `versaoBinario()`
+  lê a versão que o Go gravou no binário (`runtime/debug`). Build local sem tag mostra a
+  pseudo-versão do checkout. Não volte a chumbar versão no código.
 - Os usuários recebem o prompt do tema embutido junto com o binário; quem tiver
   `~/.config/patchlore/tema.toml` continua com o override dele.
 
@@ -118,6 +120,10 @@ Regras:
   seção `[tema]`; não troque por um encoder TOML.
 - `patchlore ultimo` não reescreve o `.patchlore.toml`; se a ref salva sumiu, ele cai para
   `HEAD`. Se não houver execução anterior, avisa sem chamar a IA.
+- `go install ...@latest` pode resolver a tag anterior por alguns minutos depois de
+  publicar (o proxy cacheia a consulta). Para garantir a versão, instale `@vX.Y.Z`.
+- Instalar com `go install ...@vX` recompila do código: os binários da release e o do
+  `go install` são funcionalmente iguais, mas só a release leva o ldflags.
 - O modo PR (`--pr`, `--comment`) e a Action nova ainda são do plano 02
   (`plans/02-go-pr-github-e-distribuicao.md`); a `action.yml` atual aponta para a versão
   Node antiga.

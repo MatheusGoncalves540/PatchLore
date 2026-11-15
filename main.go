@@ -15,6 +15,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"runtime/debug"
 	"strings"
 
 	"github.com/MatheusGoncalves540/patchlore/internal/config"
@@ -39,9 +40,24 @@ Uso
 Opções
 `
 
-// versao vem do binário: o GoReleaser injeta a tag em main.versao, então o
-// MCP e qualquer diagnóstico reportam a mesma versão publicada.
+// versao é injetada pelo GoReleaser na publicação (-X main.versao). Quem
+// instala com `go install ...@vX` compila do código e não recebe esse valor;
+// nesse caso a versão que o Go gravou no binário é lida de runtime/debug.
+// Build sem tag mostra a pseudo-versão do checkout (ou "dev" se não houver).
 var versao = "dev"
+
+func versaoBinario() string {
+	v := versao
+	if v == "dev" {
+		if info, ok := debug.ReadBuildInfo(); ok {
+			v = info.Main.Version
+		}
+	}
+	if v = strings.TrimPrefix(v, "v"); v == "" || v == "(devel)" {
+		return "dev"
+	}
+	return v
+}
 
 type opcoes struct {
 	notas, saida, provedor, modelo, titulo string
