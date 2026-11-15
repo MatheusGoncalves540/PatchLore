@@ -92,6 +92,10 @@ Regras:
 - Roda em `ubuntu-24.04` fixo e com versões fixas das actions/GoReleaser. A chave de
   cache do `setup-go` inclui a imagem do runner; `ubuntu-latest` mudou de versão e
   invalidou o cache, fazendo o primeiro build baixar/compilar tudo do zero (~105s).
+- Cache do GitHub Actions é por ref: caches salvos numa tag só valem para aquela tag.
+  Por isso o `.github/workflows/ci.yml` roda em push/PR no `main` e aquece o cache do
+  branch padrão, que é o único visível de qualquer tag. Sem isso, todo release compila
+  do zero (o primeiro alvo custa ~105s; os outros cinco reaproveitam o cache).
 - Com cache quente o build dos 6 alvos leva dezenas de segundos; o primeiro alvo é o
   mais caro e os demais reutilizam o cache de compilação.
 - Para validar o pipeline sem publicar nada, rode o workflow manualmente

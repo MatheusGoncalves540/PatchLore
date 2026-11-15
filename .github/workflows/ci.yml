@@ -1,0 +1,27 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    # Mesma imagem do release de propósito: o cache do Go é por branch e a
+    # imagem entra na chave. O cache salvo aqui (branch padrão) é o que o
+    # workflow de release aproveita nas tags, que não compartilham cache entre si.
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+          cache-dependency-path: go.sum
+
+      - run: go vet ./...
+      - run: go test ./...
