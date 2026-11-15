@@ -4,11 +4,21 @@
 limite_itens = 6
 
 prompt = """
-Você escreve patchnotes para quem USA o sistema, não para devs.
-Leia o histórico das mudanças e devolva só o que muda na experiência do usuário.
-Ignore testes, refactors internos, docs técnicas, planos, CI, dependências e merges.
-Agrupe mudanças relacionadas num item só. Nada de jargão de código, nomes de arquivo ou de função.
-Escreva em português do Brasil, frases diretas. Não invente nada que o histórico não mostre."""
+Você escreve a nota de atualização que o usuário final do sistema lê. O leitor não é dev: ele quer saber o que mudou na tela e no dia a dia dele, não como nada foi feito.
+
+Inclua apenas o que a pessoa percebe usando o sistema: telas, botões, campos, filtros, mensagens, permissões, prazos, cálculos, relatórios, importações, notificações e regras do negócio. Descreva o efeito prático e como usar, com os mesmos nomes que aparecem na interface.
+
+Deixe de fora tudo o que não muda a experiência:
+- merges, commits de teste, documentação, build, CI, deploy, dependências, lint, renomeação de código e refatoração;
+- nomes de arquivo, função, classe, tabela, coluna, branch, tag, PR, commit ou endpoint;
+- termos de implementação: API, banco, migration, backend, frontend, bug, refactor, release, versão, cache, log;
+- causa do problema, quantidade de arquivos ou de linhas e nomes de bibliotecas.
+
+Agrupe commits do mesmo assunto num único item. Cada item precisa ser uma entrega que a pessoa reconhece. Escreva no presente e na voz do sistema: "Agora dá para filtrar...", "O CPF passou a ser obrigatório...". Evite "implementamos", "refatoramos", "adicionamos suporte a" e qualquer explicação técnica.
+
+Se o histórico não tiver nada visível para o usuário, devolva um único item com a tag melhoria dizendo que o sistema ficou mais estável, sem citar o que foi feito por dentro.
+
+Escreva em português do Brasil, frases curtas e diretas. Não invente nada que o histórico não mostre."""
 
 [cores]
 fundo = "#f6f6f3"
@@ -22,7 +32,7 @@ linha = "#d4d4cf"
 # icone = caminho SVG (atributo d) numa caixa de 24x24, desenhado só com traço.
 [tags.novo]
 rotulo = "NOVO"
-descricao = "funcionalidade nova"
+descricao = "algo que passou a existir para o usuário"
 cor = "#1d4ed8"
 texto = "#ffffff"
 fundo = "#1d4ed8"
@@ -30,7 +40,7 @@ icone = "M12 5v14M5 12h14"
 
 [tags.melhoria]
 rotulo = "MELHORIA"
-descricao = "algo existente ficou melhor"
+descricao = "algo existente ficou mais fácil ou mais rápido para o usuário"
 cor = "#0f766e"
 texto = "#ffffff"
 fundo = "#0f766e"
@@ -38,7 +48,7 @@ icone = "M4 17l6-6 4 4 6-6M14 9h6v6"
 
 [tags.correcao]
 rotulo = "CORREÇÃO"
-descricao = "bug corrigido"
+descricao = "um problema que atrapalhava o usuário foi resolvido"
 cor = "#6d28d9"
 texto = "#3b0764"
 fundo = "#ede9fe"
@@ -46,7 +56,7 @@ icone = "M20 6L9 17l-5-5"
 
 [tags.regra]
 rotulo = "REGRA"
-descricao = "nova validação ou restrição"
+descricao = "nova validação ou restrição de negócio"
 cor = "#b45309"
 texto = "#7c2d12"
 fundo = "#fde7cf"

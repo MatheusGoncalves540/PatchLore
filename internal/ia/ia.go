@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 
@@ -43,7 +44,9 @@ func Sistema(t tema.Tema) string {
 }
 
 // Prompt descreve as mudanças do jeito que uma pessoa leria: cabeçalho,
-// descrição, commits e arquivos tocados.
+// descrição e os commits que podem ter efeito visível. Nomes de arquivo e
+// contagem de linhas ficam de fora: são a principal fonte de texto técnico
+// que não interessa a quem usa o sistema.
 func Prompt(m notas.Mudancas) string {
 	cabecalho := "# " + m.Repo
 	if m.Numero > 0 {
@@ -52,27 +55,48 @@ func Prompt(m notas.Mudancas) string {
 	if m.Titulo != "" {
 		cabecalho += ": " + m.Titulo
 	}
-	descricao := m.Descricao
-	if descricao == "" {
-		descricao = "(vazia)"
+	partes := []string{cabecalho, m.Antiga + " → " + m.Nova}
+	if d := strings.TrimSpace(m.Descricao); d != "" {
+		partes = append(partes, "## Descrição\n"+d)
 	}
-	var commits, arquivos strings.Builder
+	var commits strings.Builder
 	for _, c := range m.Commits {
-		commits.WriteString("- " + c + "\n")
-	}
-	for _, a := range m.Arquivos {
-		if a.Status != "" {
-			arquivos.WriteString(a.Status + " ")
+		msg := limpar(c)
+		if util(msg) {
+			commits.WriteString("- " + msg + "\n")
 		}
-		fmt.Fprintf(&arquivos, "+%d -%d %s\n", a.Adicoes, a.Remocoes, a.Nome)
 	}
-	return strings.Join([]string{
-		cabecalho,
-		m.Antiga + " → " + m.Nova,
-		"## Descrição\n" + descricao,
-		"## Commits\n" + strings.TrimSpace(commits.String()),
-		"## Arquivos\n" + strings.TrimSpace(arquivos.String()),
-	}, "\n\n")
+	if lista := strings.TrimSpace(commits.String()); lista != "" {
+		partes = append(partes, "## Commits\n"+lista)
+	}
+	return strings.Join(partes, "\n\n")
+}
+
+// ruido casa assuntos que não descrevem nada visível: merges e commits de
+// manutenção. A instrução do tema também manda ignorá-los, mas tirá-los antes
+// evita que o modelo se apoie em detalhes de bastidor.
+var ruido = regexp.MustCompile(`(?i)^(merge\b|bump\b|release\b|(chore|docs?|tests?|ci|build|deps|lint|style|refactor|wip|fixup|squash)(\([^)]*\))?!?:)`)
+
+// trailer casa as linhas que o git acrescenta ao fim da mensagem.
+var trailer = regexp.MustCompile(`(?i)^(signed-off-by|co-authored-by|reviewed-by|change-id|refs?|see-also)\s*:`)
+
+// util diz se o commit pode descrever algo que a pessoa vê.
+func util(msg string) bool {
+	assunto := strings.TrimSpace(strings.SplitN(msg, "\n", 2)[0])
+	return assunto != "" && !ruido.MatchString(assunto)
+}
+
+// limpar tira os trailers de revisão, que só interessam ao git.
+func limpar(msg string) string {
+	linhas := strings.Split(strings.ReplaceAll(msg, "\r\n", "\n"), "\n")
+	uteis := make([]string, 0, len(linhas))
+	for _, l := range linhas {
+		if trailer.MatchString(strings.TrimSpace(l)) {
+			continue
+		}
+		uteis = append(uteis, strings.TrimRight(l, " \t"))
+	}
+	return strings.TrimSpace(strings.Join(uteis, "\n"))
 }
 
 // Schema descreve as notas para a IA. Fica enxuto de propósito: a API da
@@ -87,7 +111,7 @@ func Schema(t tema.Tema) map[string]any {
 		"additionalProperties": false,
 		"required":             []string{"titulo", "itens"},
 		"properties": map[string]any{
-			"titulo": texto("Frase curta que resume a entrega, sem ponto final"),
+			"titulo": texto("Frase curta que resume a entrega para o usuário, sem ponto final e sem termos técnicos"),
 			"itens": map[string]any{
 				"type":        "array",
 				"description": fmt.Sprintf("De 1 a %d itens, do mais importante para o menos", t.LimiteItens),
@@ -97,8 +121,8 @@ func Schema(t tema.Tema) map[string]any {
 					"required":             []string{"tag", "titulo", "texto"},
 					"properties": map[string]any{
 						"tag":    map[string]any{"type": "string", "enum": t.Nomes()},
-						"titulo": texto("2 a 4 palavras"),
-						"texto":  texto("1 ou 2 frases, até ~240 caracteres, do ponto de vista de quem usa o sistema"),
+						"titulo": texto("2 a 4 palavras, usando o nome que aparece na tela (ex.: Filtro de clientes)"),
+						"texto":  texto("1 ou 2 frases, até ~240 caracteres, sobre o que a pessoa passa a poder fazer ou vê diferente; sem nomes de arquivo, código ou detalhes de implementação"),
 					},
 				},
 			},

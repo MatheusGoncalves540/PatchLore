@@ -96,13 +96,54 @@ func TestAnthropicForaDoFormato(t *testing.T) {
 
 func TestPromptESistema(t *testing.T) {
 	p := Prompt(mudancas)
-	for _, deve := range []string{"- feat: busca", "modified +1 -0 a.ts", "main → dev"} {
+	for _, deve := range []string{"- feat: busca", "main → dev"} {
 		if !strings.Contains(p, deve) {
 			t.Errorf("prompt sem %q:\n%s", deve, p)
 		}
 	}
-	if s := Sistema(temaPadrao(t)); !strings.Contains(s, "regra = nova validação") {
+	if strings.Contains(p, "a.ts") || strings.Contains(p, "## Arquivos") {
+		t.Errorf("prompt não deve expor arquivos:\n%s", p)
+	}
+	s := Sistema(temaPadrao(t))
+	if !strings.Contains(s, "regra = nova validação") {
 		t.Errorf("sistema sem as tags do tema:\n%s", s)
+	}
+	if !strings.Contains(s, "usuário final") {
+		t.Errorf("o prompt do tema precisa falar do usuário final:\n%s", s)
+	}
+}
+
+func TestPromptFiltraRuido(t *testing.T) {
+	m := notas.Mudancas{
+		Repo: "app", Antiga: "main", Nova: "dev",
+		Commits: []string{
+			"feat: busca de clientes",
+			"chore: atualiza dependências",
+			"docs(plano): relatório",
+			"Merge branch 'feat/x'",
+			"fix: CPF obrigatório\n\nSigned-off-by: Fulano <f@exemplo.invalid>\nCo-authored-by: Ciclano <c@exemplo.invalid>",
+			"ci: roda testes",
+			"refactor(config)!: separa leitura",
+		},
+		Arquivos: []notas.Arquivo{{Nome: "internal/origem/git.go", Adicoes: 9, Remocoes: 2}},
+	}
+	p := Prompt(m)
+	for _, deve := range []string{"feat: busca de clientes", "fix: CPF obrigatório"} {
+		if !strings.Contains(p, deve) {
+			t.Errorf("faltou %q:\n%s", deve, p)
+		}
+	}
+	for _, naoDeve := range []string{"chore", "docs", "Merge", "ci:", "refactor", "Signed-off-by", "Co-authored-by", "git.go", "## Arquivos", "## Descrição"} {
+		if strings.Contains(p, naoDeve) {
+			t.Errorf("prompt não deveria ter %q:\n%s", naoDeve, p)
+		}
+	}
+}
+
+func TestPromptSemNadaUtil(t *testing.T) {
+	m := notas.Mudancas{Repo: "app", Antiga: "a", Nova: "b", Commits: []string{"chore: deps", "docs: readme"}}
+	if p := Prompt(m); strings.Contains(p, "## Commits") {
+		t.Errorf("sem commits úteis, não deve haver seção de commits:\n%s", p)
 	}
 }
 
