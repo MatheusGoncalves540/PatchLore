@@ -97,7 +97,8 @@ Regras:
   branch padrão, que é o único visível de qualquer tag. Sem isso, todo release compila
   do zero (o primeiro alvo custa ~105s; os outros cinco reaproveitam o cache).
 - Com cache quente o build dos 6 alvos leva dezenas de segundos; o primeiro alvo é o
-  mais caro e os demais reutilizam o cache de compilação.
+  mais caro e os demais reutilizam o cache de compilação. Medido: ~3m07s sem cache
+  contra ~24s com o cache do `main` restaurado.
 - Para validar o pipeline sem publicar nada, rode o workflow manualmente
   (`gh workflow run release`) ou localmente:
 
