@@ -61,6 +61,16 @@ func Refs(dir string) ([]string, error) {
 	return refs, nil
 }
 
+// Resolve devolve o SHA do commit apontado por ref. É o que o PatchLore
+// lembra para saber onde parou, mesmo que a branch ande depois.
+func Resolve(dir, ref string) (string, error) {
+	saida, err := git(dir, "rev-parse", "--verify", "--quiet", "--end-of-options", ref+"^{commit}")
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(saida), nil
+}
+
 // Local lê o que entrou em nova desde antiga. Os commits vêm de antiga..nova
 // (sem merges, que só repetem o que já está nos outros commits) e os arquivos
 // de antiga...nova, que compara com o ponto onde as duas se separaram e assim

@@ -138,7 +138,7 @@ func chamarFerramenta(bruto json.RawMessage) map[string]any {
 			o.saida = filepath.Join(a.Repositorio, o.saida)
 		}
 		var log bytes.Buffer
-		if err := gerar(context.Background(), a.Repositorio, ref, o, &log); err != nil {
+		if err := gerar(context.Background(), a.Repositorio, ref, false, o, &log); err != nil {
 			return log.String(), err
 		}
 		md, _ := os.ReadFile(filepath.Join(o.saida, "patchnotes.md"))

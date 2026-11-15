@@ -67,6 +67,21 @@ patchlore
 
 Sem refs salvas, `patchlore` abre um menu com as branches locais, remotas e tags.
 
+### Continuar de onde parou
+
+Cada execução bem-sucedida anota o commit final na config do usuário, em
+`~/.config/patchlore/estado.toml`, um registro por repositório. Nada é criado
+dentro do repo por causa disso. Na próxima vez, um comando só:
+
+```bash
+patchlore ultimo
+```
+
+Ele gera o patchnotes do commit anotado até onde a ref usada na última vez
+aponta agora (ou até o `HEAD`, se essa ref sumiu). Se não houver nada novo,
+avisa sem chamar a IA. O `.patchlore.toml` não é tocado nesse modo: as refs
+nomeadas continuam como você deixou.
+
 | Opção | O que faz |
 |---|---|
 | `-o pasta` | Pasta de saída (padrão `patchlore-out`) |

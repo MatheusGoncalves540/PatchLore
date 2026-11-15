@@ -87,6 +87,20 @@ func TestLocalForaDeRepo(t *testing.T) {
 	}
 }
 
+func TestResolve(t *testing.T) {
+	dir := repoDeTeste(t)
+	sha, err := Resolve(dir, "v1")
+	if err != nil || len(sha) != 40 {
+		t.Fatalf("sha da tag: %q %v", sha, err)
+	}
+	if deNovo, _ := Resolve(dir, "main"); deNovo != sha {
+		t.Fatalf("main e v1 deveriam apontar para o mesmo commit: %q %q", deNovo, sha)
+	}
+	if _, err := Resolve(dir, "nao-existe"); err == nil {
+		t.Fatal("ref inexistente deveria dar erro")
+	}
+}
+
 func TestRefs(t *testing.T) {
 	refs, err := Refs(repoDeTeste(t))
 	if err != nil {

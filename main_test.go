@@ -13,6 +13,26 @@ import (
 	"testing"
 )
 
+// gitRun roda um comando git dentro do repo de teste.
+func gitRun(t *testing.T, dir string, args ...string) {
+	t.Helper()
+	cmd := exec.Command("git", args...)
+	cmd.Dir = dir
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("git %v: %v\n%s", args, err, out)
+	}
+}
+
+// commitArquivo cria/edita um arquivo e commita. Os dados do autor vêm do repo().
+func commitArquivo(t *testing.T, dir, arquivo, msg string) {
+	t.Helper()
+	if err := os.WriteFile(filepath.Join(dir, arquivo), []byte(msg), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	gitRun(t, dir, "add", arquivo)
+	gitRun(t, dir, "commit", "-q", "-m", msg)
+}
+
 // repo cria main (1 commit) e dev (2 commits a mais) num diretório temporário.
 func repo(t *testing.T) string {
 	t.Helper()
@@ -23,23 +43,11 @@ func repo(t *testing.T) string {
 	for _, k := range []string{"GIT_AUTHOR_EMAIL", "GIT_COMMITTER_EMAIL"} {
 		t.Setenv(k, "teste@exemplo.invalid")
 	}
-	git := func(args ...string) {
-		cmd := exec.Command("git", args...)
-		cmd.Dir = dir
-		if out, err := cmd.CombinedOutput(); err != nil {
-			t.Fatalf("git %v: %v\n%s", args, err, out)
-		}
-	}
-	commit := func(arquivo, msg string) {
-		os.WriteFile(filepath.Join(dir, arquivo), []byte(msg), 0o644)
-		git("add", arquivo)
-		git("commit", "-q", "-m", msg)
-	}
-	git("init", "-q", "-b", "main")
-	commit("base.txt", "base")
-	git("switch", "-q", "-c", "dev")
-	commit("busca.txt", "feat: busca de clientes")
-	commit("cpf.txt", "feat: CPF obrigatório")
+	gitRun(t, dir, "init", "-q", "-b", "main")
+	commitArquivo(t, dir, "base.txt", "base")
+	gitRun(t, dir, "switch", "-q", "-c", "dev")
+	commitArquivo(t, dir, "busca.txt", "feat: busca de clientes")
+	commitArquivo(t, dir, "cpf.txt", "feat: CPF obrigatório")
 	return dir
 }
 
@@ -99,6 +107,66 @@ func TestPontaAPonta(t *testing.T) {
 	}
 	if chamadas.Load() != 2 {
 		t.Error("não deveria chamar a IA sem commits")
+	}
+}
+
+// iaSimples responde sempre o mesmo JSON válido e conta as chamadas.
+func iaSimples(t *testing.T, chamadas *atomic.Int32) string {
+	t.Helper()
+	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		chamadas.Add(1)
+		notas := `{"titulo":"Novidades","itens":[{"tag":"novo","titulo":"Item","texto":"Texto."}]}`
+		resp, _ := json.Marshal(map[string]any{"choices": []any{map[string]any{"message": map[string]string{"content": notas}}}})
+		w.Write(resp)
+	}))
+	t.Cleanup(s.Close)
+	return s.URL
+}
+
+func TestUltimo(t *testing.T) {
+	dir := repo(t) // HEAD em dev
+	var chamadas atomic.Int32
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+	t.Setenv("PATCHLORE_API_KEY", "sk-teste")
+	t.Setenv("PATCHLORE_PROVIDER", "falsa")
+	t.Setenv("PATCHLORE_API_TYPE", "openai")
+	t.Setenv("PATCHLORE_BASE_URL", iaSimples(t, &chamadas))
+	t.Setenv("PATCHLORE_MODEL", "modelo-falso")
+	t.Chdir(dir)
+
+	saida := filepath.Join(t.TempDir(), "out")
+	// Sem execução anterior, avisa antes de gastar com a IA.
+	if err := rodar([]string{"ultimo", "-o", saida}, io.Discard); err == nil || !strings.Contains(err.Error(), "execução anterior") {
+		t.Fatalf("esperava aviso de primeira execução: %v", err)
+	}
+	if chamadas.Load() != 0 {
+		t.Fatal("não deveria chamar a IA sem estado salvo")
+	}
+
+	// A execução normal marca até onde paramos.
+	if err := rodar([]string{"main..dev", "-o", saida}, io.Discard); err != nil {
+		t.Fatal(err)
+	}
+
+	// Um commit novo em dev: `ultimo` pega só ele, e não precisa de refs.
+	commitArquivo(t, dir, "email.txt", "feat: e-mail obrigatório")
+	if err := rodar([]string{"ultimo", "-o", saida}, io.Discard); err != nil {
+		t.Fatalf("ultimo: %v", err)
+	}
+	if chamadas.Load() != 2 {
+		t.Errorf("esperava 2 chamadas à IA, houve %d", chamadas.Load())
+	}
+	md, _ := os.ReadFile(filepath.Join(saida, "patchnotes.md"))
+	if !strings.Contains(string(md), "1 commits") {
+		t.Errorf("o patchnotes deveria ter só o commit novo:\n%s", md)
+	}
+
+	// Rodar de novo sem commit novo avisa e não chama a IA.
+	if err := rodar([]string{"ultimo", "-o", saida}, io.Discard); err == nil || !strings.Contains(err.Error(), "nenhum commit") {
+		t.Errorf("esperava aviso de zero commits: %v", err)
+	}
+	if chamadas.Load() != 2 {
+		t.Error("não deveria chamar a IA sem commits novos")
 	}
 }
 

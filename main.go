@@ -18,6 +18,7 @@ import (
 	"strings"
 
 	"github.com/MatheusGoncalves540/patchlore/internal/config"
+	"github.com/MatheusGoncalves540/patchlore/internal/estado"
 	"github.com/MatheusGoncalves540/patchlore/internal/ia"
 	"github.com/MatheusGoncalves540/patchlore/internal/menu"
 	"github.com/MatheusGoncalves540/patchlore/internal/notas"
@@ -30,6 +31,7 @@ const uso = `patchlore: patchnotes visuais a partir do histórico do git
 
 Uso
   patchlore antiga..nova    gera o patchnotes do que entrou em nova desde antiga
+  patchlore ultimo          gera do último commit processado neste repo até agora
   patchlore                 reaproveita as refs do .patchlore.toml (ou abre o menu)
   patchlore config          configura provedores de IA (Claude, DeepSeek, outros)
   patchlore mcp             servidor MCP (stdio) para editores como Zed e Claude
@@ -84,15 +86,17 @@ func rodar(args []string, saida io.Writer) error {
 	case len(posicionais) == 1 && posicionais[0] == "mcp":
 		return servirMCP(os.Stdin, os.Stdout)
 	}
+	// Em `patchlore ultimo` a ref vem do estado salvo, não da linha de comando.
+	continuar := len(posicionais) == 1 && posicionais[0] == "ultimo"
 	ref := ""
-	if len(posicionais) == 1 {
+	if len(posicionais) == 1 && !continuar {
 		ref = posicionais[0]
 	}
 	dir, err := os.Getwd()
 	if err != nil {
 		return err
 	}
-	return gerar(context.Background(), dir, ref, o, saida)
+	return gerar(context.Background(), dir, ref, continuar, o, saida)
 }
 
 // O pacote flag para no primeiro argumento solto; aqui as flags podem vir
@@ -111,7 +115,7 @@ func lerFlags(fs *flag.FlagSet, args []string) ([]string, error) {
 	}
 }
 
-func gerar(ctx context.Context, dir, ref string, o opcoes, saida io.Writer) error {
+func gerar(ctx context.Context, dir, ref string, continuar bool, o opcoes, saida io.Writer) error {
 	// Repo e git primeiro: se faltar algo aqui, nem chegamos a gastar com a IA.
 	raiz, err := origem.Raiz(dir)
 	if err != nil {
@@ -123,7 +127,7 @@ func gerar(ctx context.Context, dir, ref string, o opcoes, saida io.Writer) erro
 		return err
 	}
 
-	antiga, nova, err := resolverRefs(raiz, arquivoProjeto, ref, saida)
+	antiga, nova, err := resolverRefs(raiz, arquivoProjeto, ref, continuar, saida)
 	if err != nil {
 		return err
 	}
@@ -134,8 +138,12 @@ func gerar(ctx context.Context, dir, ref string, o opcoes, saida io.Writer) erro
 	if err != nil {
 		return err
 	}
-	if err := config.SalvarRefs(arquivoProjeto, antiga, nova); err != nil {
-		return err
+	// O estado substitui as refs salvas em `ultimo`; reescrever o
+	// .patchlore.toml aí trocaria as refs nomeadas por um SHA.
+	if !continuar {
+		if err := config.SalvarRefs(arquivoProjeto, antiga, nova); err != nil {
+			return err
+		}
 	}
 	m.Titulo = o.titulo
 	fmt.Fprintf(saida, "%s: %d commits · %d arquivos\n", render.Refs(m), len(m.Commits), len(m.Arquivos))
@@ -144,12 +152,49 @@ func gerar(ctx context.Context, dir, ref string, o opcoes, saida io.Writer) erro
 	if err != nil {
 		return err
 	}
-	return salvar(n, m, tm, o, saida)
+	if err := salvar(n, m, tm, o, saida); err != nil {
+		return err
+	}
+	lembrar(raiz, nova, saida)
+	return nil
 }
 
-// resolverRefs: argumento explícito vence; sem ele, vale o que o projeto
-// guardou da última vez; sem nada guardado, pergunta (só se houver terminal).
-func resolverRefs(raiz, arquivoProjeto, ref string, saida io.Writer) (string, string, error) {
+// lembrar guarda o commit final para o próximo `patchlore ultimo`. Se der
+// errado, o patchnotes já está salvo: avisamos e seguimos.
+func lembrar(raiz, ref string, saida io.Writer) {
+	commit, err := origem.Resolve(raiz, ref)
+	if err != nil {
+		fmt.Fprintf(saida, "aviso: não consegui guardar até onde paramos: %v\n", err)
+		return
+	}
+	if err := estado.Salvar(raiz, estado.Estado{Ref: ref, Commit: commit}); err != nil {
+		fmt.Fprintf(saida, "aviso: não consegui guardar até onde paramos: %v\n", err)
+	}
+}
+
+// resolverRefs: argumento explícito vence; com continuar, vale o commit da
+// última execução salva no estado; sem argumento, o que o projeto guardou da
+// última vez; sem nada guardado, pergunta (só se houver terminal).
+func resolverRefs(raiz, arquivoProjeto, ref string, continuar bool, saida io.Writer) (string, string, error) {
+	if continuar {
+		e, err := estado.Ler(raiz)
+		if err != nil {
+			return "", "", err
+		}
+		if e.Commit == "" {
+			return "", "", errors.New("nenhuma execução anterior neste repositório; rode `patchlore antiga..nova` primeiro")
+		}
+		// A ref pode ter sido apagada (merge fechou a branch); nesse caso o
+		// que está em HEAD é o que a pessoa quer resumir agora.
+		nova := e.Ref
+		if nova == "" {
+			nova = "HEAD"
+		} else if _, err := origem.Resolve(raiz, nova); err != nil {
+			nova = "HEAD"
+		}
+		fmt.Fprintf(saida, "Continuando de %s até %s\n", curto(e.Commit), nova)
+		return e.Commit, nova, nil
+	}
 	if ref != "" {
 		antiga, nova, ok := strings.Cut(ref, "..")
 		if !ok || antiga == "" || nova == "" || strings.HasPrefix(nova, ".") {
@@ -173,6 +218,14 @@ func resolverRefs(raiz, arquivoProjeto, ref string, saida io.Writer) (string, st
 		return "", "", err
 	}
 	return menu.EscolherRefs(refs, "", "")
+}
+
+// curto deixa o SHA legível no terminal e no título do patchnotes.
+func curto(commit string) string {
+	if len(commit) > 7 {
+		return commit[:7]
+	}
+	return commit
 }
 
 // terminal diz se dá para abrir menu: precisa de entrada e saída interativas.
